@@ -15,8 +15,6 @@ import com.github.steveice10.packetlib.event.session.PacketReceivedEvent;
 import com.github.steveice10.packetlib.event.session.SessionAdapter;
 import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
 
-import java.util.Arrays;
-import java.util.Scanner;
 
 public class ChatClient {
 
@@ -44,12 +42,13 @@ public class ChatClient {
             @Override
             public void packetReceived(PacketReceivedEvent event) {
                 if(event.getPacket() instanceof ServerJoinGamePacket) {
-                    event.getSession().send(new ClientChatPacket("Connected with MCchatManager"));
+                    event.getSession().send(new ClientChatPacket("Connected with MCchatManager!"));
                 } else if(event.getPacket() instanceof ServerChatPacket) {
                     Message message = event.<ServerChatPacket>getPacket().getMessage();
-                    System.out.println(message.getFullText());
                     if(message instanceof TranslationMessage) {
-                        System.out.println("Received Translation Components: " + Arrays.toString(((TranslationMessage) message).getTranslationParams()));
+                        System.out.println(repColor(((TranslationMessage) message).getTranslationKey()));
+                    }else{
+                        System.out.println(repColor(message.getFullText()));
                     }
                 }
             }
@@ -70,40 +69,49 @@ public class ChatClient {
         gui = new GUIManager(this);
     }
 
-    public int getPORT()
-    {
+    public int getPORT() {
         return PORT;
     }
 
-    public String getHOST()
-    {
+    public String getHOST() {
         return HOST;
     }
 
-    public Session getSession()
-    {
+    public Session getSession() {
         return session;
     }
 
-    public Client getClient()
-    {
+    public Client getClient() {
         return client;
     }
 
-    public boolean isConnected()
-    {
+    public boolean isConnected() {
         return connected;
     }
 
     public void disconnect() {
-        disconnect( "Quitting" );
+        disconnect( "Quit" );
         gui.destroy();
+        System.out.println("Quit succeeded!");
         System.exit(0);
     }
 
-    public void disconnect(String reason)
-    {
+    public void disconnect(String reason) {
         session.disconnect( reason );
+    }
+
+    public String repColor(String msg){
+        return msg.replaceAll("§1","")
+                .replaceAll("§2","").replaceAll("§3","")
+                .replaceAll("§4","").replaceAll("§5","")
+                .replaceAll("§6","").replaceAll("§7","")
+                .replaceAll("§8","").replaceAll("§9","")
+                .replaceAll("§0","").replaceAll("§l","")
+                .replaceAll("§m","").replaceAll("§n","")
+                .replaceAll("§o","").replaceAll("§a","")
+                .replaceAll("§b","").replaceAll("§c","")
+                .replaceAll("§d","").replaceAll("§e","")
+                .replaceAll("§f","").replaceAll("§r","");
     }
 
 }

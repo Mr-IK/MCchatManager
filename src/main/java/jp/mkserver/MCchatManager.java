@@ -1,24 +1,9 @@
 package jp.mkserver;
 
-
-
-import com.github.steveice10.mc.auth.data.GameProfile;
 import com.github.steveice10.mc.auth.exception.request.RequestException;
-import com.github.steveice10.mc.protocol.MinecraftConstants;
-import com.github.steveice10.mc.protocol.MinecraftProtocol;
-import com.github.steveice10.mc.protocol.data.message.Message;
-import com.github.steveice10.mc.protocol.data.message.TranslationMessage;
-import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
-import com.github.steveice10.mc.protocol.packet.ingame.server.ServerChatPacket;
-import com.github.steveice10.mc.protocol.packet.ingame.server.ServerJoinGamePacket;
 import com.github.steveice10.packetlib.Client;
-import com.github.steveice10.packetlib.event.session.DisconnectedEvent;
-import com.github.steveice10.packetlib.event.session.PacketReceivedEvent;
-import com.github.steveice10.packetlib.event.session.SessionAdapter;
-import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
 
 import java.net.Proxy;
-import java.util.Arrays;
 import java.util.Scanner;
 
 public class MCchatManager {
@@ -33,19 +18,26 @@ public class MCchatManager {
     private static final Proxy AUTH_PROXY = Proxy.NO_PROXY;
     static boolean power = false;
 
-    public static void main(String[] args) {
+    public static void main(String[] arg) {
         System.out.println("Enabled MC chat Manager!");
         System.out.println("creator: Mr_IK");
         System.out.println("version: 1.0-SNAPSHOT");
-        if (args.length != 4) {
-            System.out.println("OMG args is not 4!! 1 = server_ip 2 = port 3 = username 4 = password plz!!");
-            return;
-        }
+        sendUpdateMessage();
+        System.out.println("サーバーipを入力してください！");
+        Scanner scan = new Scanner(System.in);
+        String[] args = new String[4];
+        args[0] = scan.next();
+        System.out.println("ポートを入力してください！");
+        args[1] = scan.next();
+        System.out.println("ユーザー名(メールアドレス)を入力してください！");
+        args[2] = scan.next();
+        System.out.println("パスワードを入力してください！");
+        args[3] = scan.next();
         ip = args[0];
         try{
             port = Integer.parseInt(args[1]);
         }catch (NumberFormatException e){
-            System.out.println("OMG arg2 is not Number!! plz type Number!!");
+            System.out.println("おっと！ポートが数字じゃないね！ 次は数字で入力してね！");
             return;
         }
         username = args[2];
@@ -58,6 +50,16 @@ public class MCchatManager {
             return;
         }
         client.connect(ip,port);
+    }
+
+    public static void sendUpdateMessage(){
+        System.out.println("--------------------------------------");
+        System.out.println("★ v0.1 アップデート情報！ ★");
+        System.out.println("* ついに 公開だ！");
+        System.out.println("MCchatManagerをベータ版公開したよ！");
+        System.out.println("* バグは報告してね！");
+        System.out.println("Discord Mr_IK#4782 に報告お願いします！");
+        System.out.println("--------------------------------------");
     }
 
 

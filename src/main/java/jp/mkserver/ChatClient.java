@@ -3,8 +3,7 @@ package jp.mkserver;
 
 import com.github.steveice10.mc.auth.exception.request.RequestException;
 import com.github.steveice10.mc.protocol.MinecraftProtocol;
-import com.github.steveice10.mc.protocol.data.message.Message;
-import com.github.steveice10.mc.protocol.data.message.TranslationMessage;
+import com.github.steveice10.mc.protocol.data.message.*;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.ServerChatPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.ServerJoinGamePacket;
@@ -14,6 +13,12 @@ import com.github.steveice10.packetlib.event.session.DisconnectedEvent;
 import com.github.steveice10.packetlib.event.session.PacketReceivedEvent;
 import com.github.steveice10.packetlib.event.session.SessionAdapter;
 import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
+import com.google.gson.*;
+import jp.mkserver.utils.ChatColour;
+import org.apache.commons.lang.StringEscapeUtils;
+
+
+import java.util.List;
 
 
 public class ChatClient {
@@ -26,30 +31,29 @@ public class ChatClient {
     private boolean connected = false;
     GUIManager gui;
 
-    public void login( String username, String password ) throws RequestException
-    {
-        System.out.println( "Logging in ..." );
+    public ChatClient(GUIManager gui){
+        this.gui = gui;
+    }
+
+    public void login( String username, String password) throws RequestException {
+        System.out.println( "ログイン中..." );
         protocol = new MinecraftProtocol( username, password, false );
-        System.out.println( "Login success!" );
+        System.out.println( "ログイン成功!" );
     }
 
     public void connect( String host, int port) {
         HOST = host;
         PORT = port;
-        System.out.println("Connecting to "+HOST +" …");
+        System.out.println(HOST +"に接続中 …");
         client = new Client( HOST, PORT, protocol, new TcpSessionFactory() );
         client.getSession().addListener(new SessionAdapter() {
             @Override
             public void packetReceived(PacketReceivedEvent event) {
                 if(event.getPacket() instanceof ServerJoinGamePacket) {
-                    event.getSession().send(new ClientChatPacket("Connected with MCchatManager!"));
+                    event.getSession().send(new ClientChatPacket("MCchatManagerで接続しました！"));
                 } else if(event.getPacket() instanceof ServerChatPacket) {
                     Message message = event.<ServerChatPacket>getPacket().getMessage();
-                    if(message instanceof TranslationMessage) {
-                        System.out.println(repColor(((TranslationMessage) message).getTranslationKey()));
-                    }else{
-                        System.out.println(repColor(message.getFullText()));
-                    }
+                    handleChat(message);
                 }
             }
 
@@ -59,14 +63,19 @@ public class ChatClient {
                 if(event.getCause() != null) {
                     event.getCause().printStackTrace();
                 }
+                System.out.println("接続が切断されました。");
+                gui.resetState();
             }
         });
         session = client.getSession();
         session.connect();
-        System.out.println( "Connection succeeded!" );
-        connected = true;
-        MCchatManager.power = true;
-        gui = new GUIManager(this);
+        if(session.isConnected()) {
+            System.out.println("接続しました！");
+            connected = true;
+            MCchatManager.power = true;
+        }else{
+            System.out.println("接続に失敗しました…");
+        }
     }
 
     public int getPORT() {
@@ -89,29 +98,116 @@ public class ChatClient {
         return connected;
     }
 
-    public void disconnect() {
+    public void end() {
         disconnect( "Quit" );
         gui.destroy();
         System.out.println("Quit succeeded!");
         System.exit(0);
     }
 
+    public void disconnect() {
+        disconnect( "Quit" );
+        System.out.println("Quit succeeded!");
+    }
+
     public void disconnect(String reason) {
         session.disconnect( reason );
     }
 
-    public String repColor(String msg){
-        return msg.replaceAll("§1","")
-                .replaceAll("§2","").replaceAll("§3","")
-                .replaceAll("§4","").replaceAll("§5","")
-                .replaceAll("§6","").replaceAll("§7","")
-                .replaceAll("§8","").replaceAll("§9","")
-                .replaceAll("§0","").replaceAll("§l","")
-                .replaceAll("§m","").replaceAll("§n","")
-                .replaceAll("§o","").replaceAll("§a","")
-                .replaceAll("§b","").replaceAll("§c","")
-                .replaceAll("§d","").replaceAll("§e","")
-                .replaceAll("§f","").replaceAll("§r","");
+
+    private void handleChat( Message mes )
+    {
+        if ( mes == null )
+        {
+            return;
+        }
+        String message = "";
+
+        MessageStyle messageType = mes.getStyle();
+        messageType.clearFormats();
+        messageType.setClickEvent(null);
+        messageType.setHoverEvent(null);
+        messageType.setInsertion(null);
+        mes.setStyle(messageType);
+
+        List<Message> subMessages = mes.getExtra();
+        for ( Message m : subMessages )
+        {
+            if ( m == null || m.toJson() == null )
+            {
+                continue;
+            }
+            if ( m.getStyle().getColor() != null )
+            {
+                ChatColor colour = m.getStyle().getColor();
+                message += getColourCode( colour.toString() );
+            }
+            if ( m.getStyle().getFormats().size() > 0 )
+            {
+                for ( ChatFormat format : m.getStyle().getFormats() )
+                {
+                    message += getColourCode( format.toString() );
+                }
+            }
+            message += m.getText();
+        }
+        message = StringEscapeUtils.unescapeJava( message );
+        if(message.equals("")){
+            message = mes.getFullText();
+        }
+        String msg = message;
+        if(isJSONValid(msg)) {
+            JsonParser parser = new JsonParser();
+            JsonElement json = parser.parse(msg);
+            if(json.isJsonPrimitive()) {
+                msg = json.getAsString();
+            } else if(json.isJsonObject()) {
+                JsonObject jsono = json.getAsJsonObject();
+                msg = jsontoStringMC(jsono);
+            }
+        }
+        //TODO: onMessageReceivedEvent(MessageReceivedEvent event);
+        msg = msg + "§r";
+        System.out.println( msg );
+    }
+
+    private static final Gson gson = new Gson();
+
+    public boolean isJSONValid(String jsonInString) {
+        try {
+            gson.fromJson(jsonInString, Object.class);
+            return true;
+        } catch(com.google.gson.JsonSyntaxException ex) {
+            return false;
+        }
+    }
+
+    public String jsontoStringMC(JsonObject jsono){
+        String msg = "";
+        if(jsono.has("extra")) {
+            JsonArray array = jsono.get("extra").getAsJsonArray();
+
+            for (int i = 0; i < array.size(); i++) {
+                JsonElement el = array.get(i);
+                if (!el.isJsonPrimitive()) {
+                    msg += jsontoStringMC(el.getAsJsonObject());
+                    if (el.getAsJsonObject().has("text")) {
+                        msg += el.getAsJsonObject().get("text").getAsString();
+                    }
+                }
+            }
+        }
+        if (jsono.has("text")) {
+            msg += jsono.get("text").getAsString();
+        }
+        return msg;
+    }
+
+
+    public static
+    String getColourCode( String name )
+    {
+        return ChatColour.valueOf( name.toUpperCase() ).getCode();
     }
 
 }

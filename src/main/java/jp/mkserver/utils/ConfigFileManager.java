@@ -1,6 +1,5 @@
 package jp.mkserver.utils;
 
-import jp.mkserver.ChatClient;
 import jp.mkserver.GUIManager;
 import jp.mkserver.MCchatManager;
 
@@ -14,7 +13,6 @@ import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 
-import static jp.mkserver.MCchatManager.sendHelp;
 
 public class ConfigFileManager {
     File file;
@@ -35,9 +33,16 @@ public class ConfigFileManager {
                 bw.newLine();
                 bw.write("※templateはよく使う条件を簡単にロードできるシステムです。");
                 bw.newLine();
-                bw.write("※<メールアドレス> // <パスワード> // <サーバーip>:<ポート番号> と書いてください。 ");
+                bw.write("※<メールアドレス> // <パスワード> // <サーバーip>:(ポート番号) と書いてください。 ");
                 bw.newLine();
-                bw.write("template=example@gmail.com // password // localhost:25565");
+                bw.write("template=example@gmail.com // password // localhost");
+                bw.newLine();
+                bw.write("※login_templateはよく使うアカウントにすぐログインできるシステムです。");
+                bw.newLine();
+                bw.write("※<メールアドレス> // <パスワード> と書いてください。 ");
+                bw.newLine();
+                bw.write("login_template=example@gmail.com // password");
+                bw.newLine();
                 bw.close();
             }else{
                 load();
@@ -46,7 +51,7 @@ public class ConfigFileManager {
             System.out.println(e.getMessage());
         }
     }
-    static boolean log_write = true;
+    public static boolean log_write = true;
 
     public void load(){
         System.out.println("[CONFIG]コンフィグをロード中…");
@@ -64,26 +69,74 @@ public class ConfigFileManager {
                     String message = str.replace("template=","");
                     String[] argserver = message.split(" // ");
                     if(argserver.length <= 2){
-                        System.out.println("[CONFIG]Error: (email // password // server_ip:port )すべてを記載してください！");
-                        sendHelp();
+                        System.out.println("[CONFIG]Error: (email // password // server_ip(:port) )すべてを記載してください！");
                         return;
                     }
                     System.out.println("[CONFIG]ロード: "+Arrays.toString(argserver));
                     gui.email = argserver[0];
                     gui.pass = argserver[1];
                     String[] argservers = argserver[2].split(":");
-                    if(argservers.length <= 1){
-                        System.out.println("[CONFIG]Error: ポート番号を記載してください！");
-                        sendHelp();
+                    gui.serverip = argservers[0];
+                    if(argservers.length >= 2){
+                        try{
+                            gui.port = Integer.parseInt(argservers[1]);
+                        }catch (NumberFormatException ee){
+                            System.out.println("Error: ポート番号が数字ではありません！");
+                            gui.resetState();
+                            return;
+                        }
+                    }else{
+                        gui.port = 25565;
+                    }
+                }else if(str.startsWith("login_template=")) {
+                    String message = str.replace("login_template=", "");
+                    String[] argserver = message.split(" // ");
+                    if (argserver.length <= 1) {
+                        System.out.println("[CONFIG]Error: (email // password)どちらも記載してください！");
                         return;
                     }
-                    gui.serverip = argservers[0];
-                    try{
-                        gui.port = Integer.parseInt(argservers[1]);
-                    }catch (NumberFormatException ee){
-                        System.out.println("[CONFIG]Error: ポート番号が数字ではありません！");
-                        sendHelp();
+                    System.out.println("[CONFIG]ロード: " + Arrays.toString(argserver));
+                    gui.email = argserver[0];
+                    gui.pass = argserver[1];
+                    gui.wave = 2;
+                }
+                str = br.readLine();
+            }
+
+            br.close();
+        }catch(IOException ignored){
+
+        }
+        System.out.println("[CONFIG]コンフィグのロード完了！");
+    }
+    public void load_template(){
+        System.out.println("[CONFIG]コンフィグをロード中…");
+        try{
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"UTF-8"));
+            String str = br.readLine();
+            while(str != null){
+                if(str.startsWith("template=")){
+                    String message = str.replace("template=","");
+                    String[] argserver = message.split(" // ");
+                    if(argserver.length <= 2){
+                        System.out.println("[CONFIG]Error: (email // password // server_ip:port )すべてを記載してください！");
                         return;
+                    }
+                    System.out.println("[CONFIG]ロード: "+Arrays.toString(argserver));
+                    gui.email = argserver[0];
+                    gui.pass = argserver[1];
+                    String[] argservers = argserver[2].split(":");
+                    gui.serverip = argservers[0];
+                    if(argservers.length >= 2){
+                        try{
+                            gui.port = Integer.parseInt(argservers[1]);
+                        }catch (NumberFormatException ee){
+                            System.out.println("Error: ポート番号が数字ではありません！");
+                            gui.resetState();
+                            return;
+                        }
+                    }else{
+                        gui.port = 25565;
                     }
                 }
                 str = br.readLine();
@@ -95,6 +148,37 @@ public class ConfigFileManager {
         }
         System.out.println("[CONFIG]コンフィグのロード完了！");
     }
+
+    public void load_login(){
+        System.out.println("[CONFIG]コンフィグをロード中…");
+        try{
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"UTF-8"));
+            String str = br.readLine();
+            while(str != null){
+                if(str.startsWith("login_template=")){
+                    String message = str.replace("login_template=","");
+                    String[] argserver = message.split(" // ");
+                    if(argserver.length <= 1){
+                        System.out.println("[CONFIG]Error: (email // password)どちらも記載してください！");
+                        return;
+                    }
+                    System.out.println("[CONFIG]ロード: "+Arrays.toString(argserver));
+                    gui.email = argserver[0];
+                    gui.pass = argserver[1];
+                    gui.wave = 2;
+                    gui.text1.setText("サーバーIP:ポートを入力してください");
+                    System.out.println("サーバーIP:ポートを入力してください");
+                }
+                str = br.readLine();
+            }
+
+            br.close();
+        }catch(IOException ignored){
+
+        }
+        System.out.println("[CONFIG]コンフィグのロード完了！");
+    }
+
 
     public Path getApplicationPath(Class<?> cls) throws URISyntaxException {
         ProtectionDomain pd = cls.getProtectionDomain();

@@ -3,10 +3,12 @@ package jp.mkserver;
 
 import com.github.steveice10.mc.auth.exception.request.RequestException;
 import com.github.steveice10.mc.protocol.MinecraftProtocol;
+import com.github.steveice10.mc.protocol.data.game.PlayerListEntry;
 import com.github.steveice10.mc.protocol.data.message.*;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.ServerChatPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.ServerJoinGamePacket;
+import com.github.steveice10.mc.protocol.packet.ingame.server.ServerPlayerListEntryPacket;
 import com.github.steveice10.packetlib.Client;
 import com.github.steveice10.packetlib.Session;
 import com.github.steveice10.packetlib.event.session.DisconnectedEvent;
@@ -18,18 +20,26 @@ import jp.mkserver.utils.ChatColour;
 import org.apache.commons.lang.StringEscapeUtils;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class ChatClient {
 
+    enum Option{
+        Template
+    }
+
+    private String USER;
+    private String PASS;
     private String  HOST;
     private int     PORT;
-    private Session session;
+    public Session session;
     private Client client;
     MinecraftProtocol protocol;
     private boolean connected = false;
     GUIManager gui;
+    public ArrayList<String> playerlist = new ArrayList<>();
 
     public ChatClient(GUIManager gui){
         this.gui = gui;
@@ -39,11 +49,24 @@ public class ChatClient {
         System.out.println( "ログイン中..." );
         protocol = new MinecraftProtocol( username, password, false );
         System.out.println( "ログイン成功!" );
+        USER = username;
+        PASS = password;
     }
 
-    public void connect( String host, int port) {
+    public void connect( String host, int port,boolean template) {
+        if(session != null && session.isConnected()) {
+            disconnect();
+            if(template){
+                MCchatManager.config.load_template();
+            }else{
+                gui.email  = USER;
+                gui.pass = PASS;
+            }
+        }
         HOST = host;
         PORT = port;
+        gui.wave = 3;
+        gui.text1.setText("チャットしたい内容を入力");
         System.out.println(HOST +"に接続中 …");
         client = new Client( HOST, PORT, protocol, new TcpSessionFactory() );
         client.getSession().addListener(new SessionAdapter() {
@@ -54,6 +77,23 @@ public class ChatClient {
                 } else if(event.getPacket() instanceof ServerChatPacket) {
                     Message message = event.<ServerChatPacket>getPacket().getMessage();
                     handleChat(message);
+                } else if(event.getPacket() instanceof ServerPlayerListEntryPacket){
+                    for(PlayerListEntry ple : ((ServerPlayerListEntryPacket) event.getPacket() ).getEntries()){
+                        switch(((ServerPlayerListEntryPacket) event.getPacket() ).getAction()){
+                            case ADD_PLAYER:
+                                playerlist.add(ple.getProfile().getName());
+                                break;
+                            case REMOVE_PLAYER:
+                                playerlist.remove(ple.getProfile().getName());
+                                break;
+                            case UPDATE_DISPLAY_NAME:
+                                break;
+                            case UPDATE_GAMEMODE:
+                                break;
+                            case UPDATE_LATENCY:
+                                break;
+                        }
+                    }
                 }
             }
 
@@ -204,8 +244,7 @@ public class ChatClient {
     }
 
 
-    public static
-    String getColourCode( String name )
+    public static String getColourCode( String name )
     {
         return ChatColour.valueOf( name.toUpperCase() ).getCode();
     }

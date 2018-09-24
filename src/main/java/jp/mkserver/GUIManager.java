@@ -2,43 +2,67 @@ package jp.mkserver;
 
 import com.github.steveice10.mc.auth.exception.request.RequestException;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
-import jp.mkserver.utils.ConfigFileManager;
+import jp.mkserver.utils.DefaultContextMenu;
 import jp.mkserver.utils.TextAreaOutputStream;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.CodeSource;
+import java.security.ProtectionDomain;
+import java.util.ArrayList;
 import java.util.Locale;
 
-import static jp.mkserver.MCchatManager.sendHelp;
-
 public class GUIManager extends JFrame implements ActionListener {
-    JTextField text1;
+
+
+
+    public ArrayList<String> inputlist = new ArrayList<>();
+    int myinputget = 0;
+
+    public JTextField text1;
+    public JTextArea area;
     ChatClient client;
-    int wave = 0;
+    public int wave = 0;
     public String email;
     public String pass;
     public String serverip;
     public int port;
 
+
     GUIManager (){
         this.client = new ChatClient(this);
         setTitle("MCchatManager");
-        setSize(500,300);
+        setSize(500,400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         URL url=getClass().getClassLoader().getResource("Icon.png");
         ImageIcon icon=new ImageIcon(url);
         setIconImage(icon.getImage());
 
-        JTextArea area = new JTextArea();
+        area = new JTextArea();
+
         area.setBackground(Color.BLACK);
         area.setForeground(Color.WHITE);
-        area.setRows(14);
+        area.setRows(18);
         area.setEditable(false);
+
+        DefaultContextMenu.addDefaultContextMenu(area);
+
+
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         Font fonts[] = ge.getAllFonts();
         for(Font font : fonts){
@@ -57,16 +81,155 @@ public class GUIManager extends JFrame implements ActionListener {
         System.setErr(printStream);
         JScrollPane scrollpane = new JScrollPane(area);
 
+        BufferedImage backgroundImg = null;
+        try {
+            backgroundImg = ImageIO.read(new File(getApplicationPath(MCchatManager.class).getParent().toString()+File.separator+"back.png"));
+        } catch (IOException | URISyntaxException ignored) {
+        }
+
         Container contentPane = getContentPane();
+        if(backgroundImg != null) {
+            Icon backgroundIcon = new ImageIcon(backgroundImg);
+            JLabel contentLabel = new JLabel(backgroundIcon);
+            contentLabel.setLayout(new BorderLayout());
+            area.setOpaque(false);
+            scrollpane.setOpaque(false);
+            scrollpane.getViewport().setOpaque(false);
+            contentLabel.add(scrollpane, BorderLayout.CENTER);
+            contentPane.add(contentLabel, BorderLayout.NORTH);
+        }else{
+            contentPane.add(scrollpane, BorderLayout.NORTH);
+        }
         JPanel p = new JPanel();
+        p.setOpaque(true);
         text1 = new JTextField("メールアドレスを入力", 20);
+        text1.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    String message = text1.getText();
+                    if(message.replace(" ","").replace("　","").equalsIgnoreCase("")){
+                        return;
+                    }
+                    inputlist.add(message);
+                    myinputget = inputlist.size()-1;
+                    if (message.equalsIgnoreCase("!end")) {
+                        System.out.println("See you!");
+                        client.end();
+                        return;
+                    }
+                    if (wave != 3) {
+                        if (wave == 0) {
+                            email = message;
+                            text1.setText("パスワードを入力");
+                            System.out.println("パスワードを入力してください");
+                            wave++;
+                            return;
+                        } else if (wave == 1) {
+                            pass = message;
+                            text1.setText("サーバーIP:ポートを入力");
+                            System.out.println("サーバーIP:ポートを入力してください");
+                            wave++;
+                            return;
+                        } else if (wave == 2) {
+                            String[] argserver = message.split(":");
+                            serverip = argserver[0];
+                            if (argserver.length >= 2) {
+                                try {
+                                    port = Integer.parseInt(argserver[1]);
+                                } catch (NumberFormatException ee) {
+                                    System.out.println("Error: ポート番号が数字ではありません！");
+                                    resetState();
+                                    return;
+                                }
+                            } else {
+                                port = 25565;
+                            }
+                            text1.setText("チャット内容を入力");
+                            wave++;
+                            try {
+                                client.login(email, pass);
+                            } catch (RequestException ee) {
+                                System.out.println("Error: ログインに失敗しました。emailかpasswordが間違っています。");
+                                resetState();
+                                return;
+                            }
+                            client.connect(serverip, port, false);
+                            return;
+                        }
+                    }
+                    if (message.equalsIgnoreCase("!server info")) {
+                        System.out.println("IP: " + client.getSession().getHost() + " PORT: " + client.getSession().getPort());
+                        text1.setText("");
+                        return;
+                    } else if (message.equalsIgnoreCase("!quit")) {
+                        text1.setText("");
+                        client.disconnect();
+                        return;
+                    }
+                    client.getSession().send(new ClientChatPacket(message));
+                    text1.setText("");
+                }else if(e.getKeyCode() == KeyEvent.VK_UP) {
+                    if(inputlist.size()==0){
+                        return;
+                    }
+                    text1.setText(inputlist.get(myinputget));
+                    if(myinputget != 0) {
+                        myinputget--;
+                    }
+                }else if(e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    if(inputlist.size()==0){
+                        return;
+                    }
+                    text1.setText(inputlist.get(myinputget));
+                    if(myinputget != inputlist.size()-1) {
+                        myinputget++;
+                    }
+                }else if(e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                    if (client.session != null && client.session.isConnected()) {
+                        int i = 0;
+                        String str = "";
+                        for (String p : client.playerlist) {
+                            str += p;
+                            if (i == 5) {
+                                i = 0;
+                                System.out.println("PlayerList: " + str);
+                                str = "";
+                            }
+                            i++;
+                        }
+                        if (!str.equalsIgnoreCase("")) {
+                            System.out.println("PlayerList: " + str);
+                        }
+                    } else {
+                        System.out.println("Error: サーバーにjoinしてない時はTABでのリスト表示を行えません");
+                    }
+                }
+            }
+        });
         JButton button = new JButton("送信");
         button.addActionListener(this);
 
+        JPanel p2 = new JPanel();
+        JButton button1 = new JButton("テンプレLogin");
+        button1.addActionListener(new ClickAction2(this));
+        JButton button2 = new JButton("テンプレJoin");
+        button2.addActionListener(new ClickAction3(this));
+        JButton button3 = new JButton("情報reset");
+        button3.addActionListener(new ClickAction4(this));
+        JButton button4 = new JButton("サーバー離脱");
+        button4.addActionListener(new ClickAction5(this));
+
         p.add(text1);
         p.add(button);
+
+        p2.add(button1);
+        p2.add(button2);
+        p2.add(button3);
+        p2.add(button4);
+
         contentPane.add(p, BorderLayout.CENTER);
-        contentPane.add(scrollpane, BorderLayout.NORTH);
+        contentPane.add(p2, BorderLayout.SOUTH);
 
         setVisible(true);
     }
@@ -74,77 +237,140 @@ public class GUIManager extends JFrame implements ActionListener {
 
     public void actionPerformed(ActionEvent e){
         String message = text1.getText();
-        if(message.equalsIgnoreCase("!end")) {
+        if(message.replace(" ","").replace("　","").equalsIgnoreCase("")){
+            return;
+        }
+        inputlist.add(message);
+        myinputget = inputlist.size()-1;
+        if (message.equalsIgnoreCase("!end")) {
             System.out.println("See you!");
             client.end();
             return;
-        }else if(message.equalsIgnoreCase("!template")){
-            text1.setText("");
-            MCchatManager.config.load();
-            try {
-                client.login(email,pass);
-            } catch (RequestException ee) {
-                System.out.println("Error: ログインに失敗しました。emailかpasswordが間違っています。");
-                resetState();
-                return;
-            }
-            client.connect(serverip,port);
-            return;
         }
-        if(wave != 3){
-            if(wave == 0){
+        if (wave != 3) {
+            if (wave == 0) {
                 email = message;
                 text1.setText("パスワードを入力");
                 System.out.println("パスワードを入力してください");
                 wave++;
                 return;
-            }else if(wave == 1){
+            } else if (wave == 1) {
                 pass = message;
                 text1.setText("サーバーIP:ポートを入力");
                 System.out.println("サーバーIP:ポートを入力してください");
                 wave++;
                 return;
-            }else if(wave == 2){
+            } else if (wave == 2) {
                 String[] argserver = message.split(":");
-                if(argserver.length <= 1){
-                    System.out.println("Error: ポート番号を記載してください！");
-                    sendHelp();
-                    resetState();
-                    return;
-                }
                 serverip = argserver[0];
-                try{
-                    port = Integer.parseInt(argserver[1]);
-                }catch (NumberFormatException ee){
-                    System.out.println("Error: ポート番号が数字ではありません！");
-                    sendHelp();
-                    resetState();
-                    return;
+                if (argserver.length >= 2) {
+                    try {
+                        port = Integer.parseInt(argserver[1]);
+                    } catch (NumberFormatException ee) {
+                        System.out.println("Error: ポート番号が数字ではありません！");
+                        resetState();
+                        return;
+                    }
+                } else {
+                    port = 25565;
                 }
-                text1.setText("チャットを入力");
+                text1.setText("チャット内容を入力");
                 wave++;
                 try {
-                    client.login(email,pass);
+                    client.login(email, pass);
                 } catch (RequestException ee) {
                     System.out.println("Error: ログインに失敗しました。emailかpasswordが間違っています。");
                     resetState();
                     return;
                 }
-                client.connect(serverip,port);
+                client.connect(serverip, port, false);
                 return;
             }
         }
-        if(message.equalsIgnoreCase("!server info")){
-            System.out.println("IP: "+client.getSession().getHost()+" PORT: "+client.getSession().getPort());
+        if (message.equalsIgnoreCase("!server info")) {
+            System.out.println("IP: " + client.getSession().getHost() + " PORT: " + client.getSession().getPort());
             text1.setText("");
-            return;
-        }else if(message.equalsIgnoreCase("!quit")){
-            text1.setText("");
-            client.disconnect();
             return;
         }
         client.getSession().send(new ClientChatPacket(message));
         text1.setText("");
+    }
+
+    class ClickAction2 implements ActionListener {
+
+        GUIManager guiManager;
+        public ClickAction2(GUIManager guiManager){
+            this.guiManager = guiManager;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(guiManager.client.session == null || !guiManager.client.session.isConnected()) {
+                MCchatManager.config.load_login();
+            }else{
+                System.out.println("Error: サーバーjoin中はloginを行えません");
+            }
+        }
+    }
+
+    class ClickAction3 implements ActionListener {
+
+        GUIManager guiManager;
+        public ClickAction3(GUIManager guiManager){
+            this.guiManager = guiManager;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(guiManager.client.session == null || !guiManager.client.session.isConnected()) {
+                MCchatManager.config.load_template();
+                try {
+                    client.login(email, pass);
+                } catch (RequestException ee) {
+                    System.out.println("Error: ログインに失敗しました。emailかpasswordが間違っています。");
+                    resetState();
+                    return;
+                }
+                client.connect(serverip, port, true);
+            }else{
+                System.out.println("Error: サーバーjoin中はjoinを行えません");
+            }
+        }
+    }
+
+    class ClickAction4 implements ActionListener {
+
+        GUIManager guiManager;
+        public ClickAction4(GUIManager guiManager){
+            this.guiManager = guiManager;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(guiManager.client.session == null || !guiManager.client.session.isConnected()) {
+                guiManager.resetState();
+            }else{
+                System.out.println("Error: サーバーjoin中はresetを行えません");
+            }
+        }
+    }
+
+    class ClickAction5 implements ActionListener {
+
+        GUIManager guiManager;
+        public ClickAction5(GUIManager guiManager){
+            this.guiManager = guiManager;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(guiManager.client.session != null && guiManager.client.session.isConnected()) {
+                guiManager.text1.setText("");
+                client.disconnect();
+            }else{
+                System.out.println("Error: サーバーにjoinしてない時は離脱を行えません");
+            }
+        }
     }
 
     public void resetState(){
@@ -161,5 +387,13 @@ public class GUIManager extends JFrame implements ActionListener {
         dispose();
     }
 
+    public Path getApplicationPath(Class<?> cls) throws URISyntaxException {
+        ProtectionDomain pd = cls.getProtectionDomain();
+        CodeSource cs = pd.getCodeSource();
+        URL location = cs.getLocation();
+        URI uri = location.toURI();
+        Path path = Paths.get(uri);
+        return path;
+    }
 
 }

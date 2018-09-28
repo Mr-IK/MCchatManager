@@ -3,7 +3,6 @@ package jp.mkserver.utils;
 import jp.mkserver.GUIManager;
 import jp.mkserver.MCchatManager;
 
-import java.awt.*;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,9 +45,9 @@ public class ConfigFileManager {
                 bw.newLine();
                 bw.write("※text_colorはテキストカラーを指定できます");
                 bw.newLine();
-                bw.write("※https://gyazo.com/01d4f78bd3c8d533157bb5b6fcc06740 を参考に");
+                bw.write("※http://pdf-file.nnn2.com/?p=145 を参考に");
                 bw.newLine();
-                bw.write("text_color=white");
+                bw.write("text_color=255 // 255 // 255");
                 bw.close();
             }else{
                 load();
@@ -107,11 +106,22 @@ public class ConfigFileManager {
                     gui.wave = 2;
                 }else if(str.startsWith("text_color=")) {
                     String message = str.replace("text_color=", "");
-                    if(Color.getColor(message) == null){
+                    String[] argserver = message.split(" // ");
+                    if (argserver.length <= 2) {
+                        System.out.println("[CONFIG]Error: (r // g // b)すべて記載してください！");
                         return;
-                    }else{
-                        gui.setTextColor(message);
                     }
+                    int r,g,b;
+                    try{
+                        r = Integer.parseInt(argserver[0]);
+                        g = Integer.parseInt(argserver[1]);
+                        b = Integer.parseInt(argserver[2]);
+                    }catch (NumberFormatException ee){
+                        System.out.println("Error: RGBが数字ではありません！");
+                        gui.resetState();
+                        return;
+                    }
+                    gui.setTextColor(r,g,b);
                 }
                 str = br.readLine();
             }

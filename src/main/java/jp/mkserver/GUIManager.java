@@ -236,8 +236,9 @@ public class GUIManager extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    public void setTextColor(String color){
-        area.setForeground(Color.getColor(color));
+    public void setTextColor(int r,int g,int b){
+        area.setForeground(new Color(r,g,b));
+        area.updateUI();
     }
 
 

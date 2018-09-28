@@ -4,6 +4,7 @@ import jp.mkserver.apis.java.JarLoader;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.jar.JarFile;
 
 
 public class PluginAPI {
@@ -16,15 +17,23 @@ public class PluginAPI {
             return;
         }
         for(File file : files){
-            loadPlugin(file);
+            if ( file.isFile() && file.getName().endsWith( ".jar" ) ) {
+                try ( JarFile jar = new JarFile( file ) ) {
+                    loadPlugin(file);
+                } catch ( Exception ignored) {
+                }
+            }
         }
     }
 
     public static void loadPlugin(File file){
-        plugins.add(file);
         try {
             PluginManager pm = (PluginManager) JarLoader.callClass(file);
+            if(pm==null){
+                return;
+            }
             pm.onEnable();
+            plugins.add(file);
         } catch (Exception ignored) {
         }
     }

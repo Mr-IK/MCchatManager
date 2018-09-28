@@ -1,5 +1,7 @@
 package jp.mkserver.utils;
 
+import jp.mkserver.apis.event.EventAPI;
+
 import javax.swing.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,8 +17,13 @@ public class TextAreaOutputStream extends OutputStream {
         this.logFileManager = new LogFileManager();
     }
     @Override public void flush() throws IOException {
-        area.append(ChatColour.repColor(buf.toString("UTF-8")));
-        logFileManager.write(ChatColour.repColor(buf.toString("UTF-8")));
+        String msg = ChatColour.repColor(buf.toString("UTF-8"));
+        msg = EventAPI.viewMessage(msg);
+        if(msg==null){
+            return;
+        }
+        area.append(msg);
+        logFileManager.write(msg);
         buf.reset();
         area.setCaretPosition(area.getText().length());
     }

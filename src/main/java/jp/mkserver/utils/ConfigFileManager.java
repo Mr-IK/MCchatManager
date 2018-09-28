@@ -3,6 +3,7 @@ package jp.mkserver.utils;
 import jp.mkserver.GUIManager;
 import jp.mkserver.MCchatManager;
 
+import java.awt.*;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,6 +44,11 @@ public class ConfigFileManager {
                 bw.newLine();
                 bw.write("login_template=example@gmail.com // password");
                 bw.newLine();
+                bw.write("※text_colorはテキストカラーを指定できます");
+                bw.newLine();
+                bw.write("※https://gyazo.com/01d4f78bd3c8d533157bb5b6fcc06740 を参考に");
+                bw.newLine();
+                bw.write("text_color=white");
                 bw.close();
             }else{
                 load();
@@ -99,6 +105,13 @@ public class ConfigFileManager {
                     gui.email = argserver[0];
                     gui.pass = argserver[1];
                     gui.wave = 2;
+                }else if(str.startsWith("text_color=")) {
+                    String message = str.replace("text_color=", "");
+                    if(Color.getColor(message) == null){
+                        return;
+                    }else{
+                        gui.setTextColor(message);
+                    }
                 }
                 str = br.readLine();
             }
@@ -188,4 +201,6 @@ public class ConfigFileManager {
         Path path = Paths.get(uri);
         return path;
     }
+
+
 }

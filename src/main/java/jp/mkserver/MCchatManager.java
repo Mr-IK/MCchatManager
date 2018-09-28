@@ -1,50 +1,45 @@
 package jp.mkserver;
 
 
+import jp.mkserver.apis.PluginAPI;
 import jp.mkserver.utils.ConfigFileManager;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.CodeSource;
-import java.security.ProtectionDomain;
-
-public class MCchatManager {
+public class MCchatManager implements Runnable {
 
 
     static boolean power = false;
-    static ConfigFileManager config;
+    public static ConfigFileManager config;
+    public static GUIManager gui;
 
     public static void main(String[] arg) {
-        GUIManager gui = new GUIManager();
+        Runtime.getRuntime().addShutdownHook(new Thread(new MCchatManager(), "Shutdown"));
+        gui = new GUIManager();
         System.out.println("Enabled MC chat Manager!");
         System.out.println("creator: Mr_IK");
-        System.out.println("version: 0.6");
+        System.out.println("version: 1.0");
         sendUpdateMessage();
         config = new ConfigFileManager(gui);
+        System.out.println(" ");
+        System.out.println( "プラグインをロード中…" );
+        PluginAPI.loadPluginAll();
+        System.out.println( "プラグインのロード完了!(ロードプラグイン数: "+PluginAPI.plugins.size()+")" );
+        System.out.println(" ");
         System.out.println( "メールアドレスを入力してください！" );
         System.out.println( "テンプレートで接続したい場合　テンプレJoinボタンを押してください" );
     }
 
     public static void sendUpdateMessage(){
         System.out.println(("--------------------------------------"));
-        System.out.println(("★ v0.6 アップデート情報！ ★"));
-        System.out.println(("* プレイヤーリストかもーんぬ"));
-        System.out.println(("tabキーでプレイヤーリストが出てくるようになった"));
-        System.out.println(("* アップ↑ダウン↓"));
-        System.out.println(("↑↓キーで過去のチャット・コマンドを呼べるぞ！"));
+        System.out.println(("★ v1.0 アップデート情報！ ★"));
+        System.out.println(("* プラグイン作成!"));
+        System.out.println(("プラグインを作れるようになった！"));
+        System.out.println(("* 文字の色設定！"));
+        System.out.println(("configで設定できる！"));
         System.out.println(("--------------------------------------"));
     }
 
-    public static Path getApplicationPath(Class<?> cls) throws URISyntaxException {
-        ProtectionDomain pd = cls.getProtectionDomain();
-        CodeSource cs = pd.getCodeSource();
-        URL location = cs.getLocation();
-        URI uri = location.toURI();
-        Path path = Paths.get(uri);
-        return path;
+    public void run(){
+        PluginAPI.unloadPluginAll();
     }
 
 

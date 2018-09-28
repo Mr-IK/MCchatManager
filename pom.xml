@@ -6,7 +6,7 @@
 
     <groupId>jp.mkserver</groupId>
     <artifactId>MCchatManager</artifactId>
-    <version>0.6</version>
+    <version>1.0</version>
 
     <build>
        <defaultGoal>

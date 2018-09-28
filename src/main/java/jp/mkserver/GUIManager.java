@@ -2,6 +2,8 @@ package jp.mkserver;
 
 import com.github.steveice10.mc.auth.exception.request.RequestException;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
+import jp.mkserver.apis.event.EventAPI;
+import jp.mkserver.utils.ConfigFileManager;
 import jp.mkserver.utils.DefaultContextMenu;
 import jp.mkserver.utils.TextAreaOutputStream;
 
@@ -36,7 +38,7 @@ public class GUIManager extends JFrame implements ActionListener {
 
     public JTextField text1;
     public JTextArea area;
-    ChatClient client;
+    public ChatClient client;
     public int wave = 0;
     public String email;
     public String pass;
@@ -167,7 +169,7 @@ public class GUIManager extends JFrame implements ActionListener {
                         client.disconnect();
                         return;
                     }
-                    client.getSession().send(new ClientChatPacket(message));
+                    EventAPI.sendMessage(message);
                     text1.setText("");
                 }else if(e.getKeyCode() == KeyEvent.VK_UP) {
                     if(inputlist.size()==0){
@@ -234,6 +236,11 @@ public class GUIManager extends JFrame implements ActionListener {
         setVisible(true);
     }
 
+    public void setTextColor(String color){
+        area.setForeground(Color.getColor(color));
+    }
+
+
 
     public void actionPerformed(ActionEvent e){
         String message = text1.getText();
@@ -292,7 +299,7 @@ public class GUIManager extends JFrame implements ActionListener {
             text1.setText("");
             return;
         }
-        client.getSession().send(new ClientChatPacket(message));
+        EventAPI.sendMessage(message);
         text1.setText("");
     }
 

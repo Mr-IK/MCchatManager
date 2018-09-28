@@ -56,6 +56,7 @@ public class ConfigFileManager {
             System.out.println(e.getMessage());
         }
     }
+
     public static boolean log_write = true;
 
     public void load(){

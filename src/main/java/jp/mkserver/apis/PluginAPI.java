@@ -39,17 +39,28 @@ public class PluginAPI {
     }
 
     public static void unloadPlugin(File file){
-        plugins.remove(file);
         try {
             PluginManager pm = (PluginManager) JarLoader.callClass(file);
+            if(pm==null){
+                return;
+            }
             pm.onDisable();
+            plugins.remove(file);
         } catch (Exception ignored) {
         }
     }
 
     public static void unloadPluginAll(){
         for(File file : plugins){
-            unloadPlugin(file);
+            try {
+                PluginManager pm = (PluginManager) JarLoader.callClass(file);
+                if(pm==null){
+                    return;
+                }
+                pm.onDisable();
+            } catch (Exception ignored) {
+            }
         }
+        plugins.clear();
     }
 }

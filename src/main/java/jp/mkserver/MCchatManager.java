@@ -4,7 +4,7 @@ package jp.mkserver;
 import jp.mkserver.apis.PluginAPI;
 import jp.mkserver.utils.ConfigFileManager;
 
-public class MCchatManager implements Runnable {
+public class MCchatManager {
 
 
     static boolean power = false;
@@ -12,11 +12,10 @@ public class MCchatManager implements Runnable {
     public static GUIManager gui;
 
     public static void main(String[] arg) {
-        Runtime.getRuntime().addShutdownHook(new Thread(new MCchatManager(), "Shutdown"));
         gui = new GUIManager();
         System.out.println("Enabled MC chat Manager!");
         System.out.println("creator: Mr_IK");
-        System.out.println("version: 1.0");
+        System.out.println("version: 1.1");
         sendUpdateMessage();
         config = new ConfigFileManager(gui);
         System.out.println(" ");
@@ -30,16 +29,12 @@ public class MCchatManager implements Runnable {
 
     public static void sendUpdateMessage(){
         System.out.println(("--------------------------------------"));
-        System.out.println(("★ v1.0 アップデート情報！ ★"));
-        System.out.println(("* プラグイン作成!"));
-        System.out.println(("プラグインを作れるようになった！"));
-        System.out.println(("* 文字の色設定！"));
-        System.out.println(("configで設定できる！"));
+        System.out.println(("★ v1.1 アップデート情報！ ★"));
+        System.out.println(("* プラグイン機能アップデート!"));
+        System.out.println(("さらに沢山の機能を追加・修正！"));
+        System.out.println(("* !endくんさらば！"));
+        System.out.println(("もうXを押せばいいよね！"));
         System.out.println(("--------------------------------------"));
-    }
-
-    public void run(){
-        PluginAPI.unloadPluginAll();
     }
 
 

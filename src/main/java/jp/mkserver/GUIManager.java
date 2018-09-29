@@ -1,19 +1,15 @@
 package jp.mkserver;
 
 import com.github.steveice10.mc.auth.exception.request.RequestException;
-import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
+import jp.mkserver.apis.PluginAPI;
 import jp.mkserver.apis.event.EventAPI;
-import jp.mkserver.utils.ConfigFileManager;
 import jp.mkserver.utils.DefaultContextMenu;
 import jp.mkserver.utils.TextAreaOutputStream;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +46,8 @@ public class GUIManager extends JFrame implements ActionListener {
         this.client = new ChatClient(this);
         setTitle("MCchatManager");
         setSize(500,400);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowClosing());
         URL url=getClass().getClassLoader().getResource("Icon.png");
         ImageIcon icon=new ImageIcon(url);
         setIconImage(icon.getImage());
@@ -115,10 +112,12 @@ public class GUIManager extends JFrame implements ActionListener {
                     }
                     inputlist.add(message);
                     myinputget = inputlist.size()-1;
-                    if (message.equalsIgnoreCase("!end")) {
-                        System.out.println("See you!");
-                        client.end();
-                        return;
+                    if(message.startsWith("!")){
+                        String cmd = message.replaceFirst("!","");
+                        text1.setText("");
+                        if(!EventAPI.executeCommand(cmd)){
+                            return;
+                        }
                     }
                     if (wave != 3) {
                         if (wave == 0) {
@@ -233,6 +232,7 @@ public class GUIManager extends JFrame implements ActionListener {
         contentPane.add(p, BorderLayout.CENTER);
         contentPane.add(p2, BorderLayout.SOUTH);
 
+        wave = 0;
         setVisible(true);
     }
 
@@ -250,10 +250,12 @@ public class GUIManager extends JFrame implements ActionListener {
         }
         inputlist.add(message);
         myinputget = inputlist.size()-1;
-        if (message.equalsIgnoreCase("!end")) {
-            System.out.println("See you!");
-            client.end();
-            return;
+        if(message.startsWith("!")){
+            String cmd = message.replaceFirst("!","");
+            text1.setText("");
+            if(!EventAPI.executeCommand(cmd)){
+                return;
+            }
         }
         if (wave != 3) {
             if (wave == 0) {
@@ -402,6 +404,16 @@ public class GUIManager extends JFrame implements ActionListener {
         URI uri = location.toURI();
         Path path = Paths.get(uri);
         return path;
+    }
+
+    class WindowClosing extends WindowAdapter{
+        public void windowClosing(WindowEvent e) {
+            int ans = JOptionPane.showConfirmDialog(GUIManager.this, "本当に終了しますか?","終了確認",JOptionPane.YES_NO_OPTION);
+            if(ans == JOptionPane.YES_OPTION) {
+                PluginAPI.unloadPluginAll();
+                System.exit(0);
+            }
+        }
     }
 
 }

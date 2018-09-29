@@ -104,7 +104,6 @@ public class ConfigFileManager {
                     System.out.println("[CONFIG]ロード: " + Arrays.toString(argserver));
                     gui.email = argserver[0];
                     gui.pass = argserver[1];
-                    gui.wave = 2;
                 }else if(str.startsWith("text_color=")) {
                     String message = str.replace("text_color=", "");
                     String[] argserver = message.split(" // ");

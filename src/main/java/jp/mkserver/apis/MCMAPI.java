@@ -1,6 +1,8 @@
 package jp.mkserver.apis;
 
+import com.github.steveice10.mc.auth.exception.request.RequestException;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
+import jp.mkserver.ChatClient;
 import jp.mkserver.GUIManager;
 import jp.mkserver.MCchatManager;
 import jp.mkserver.utils.ConfigFileManager;
@@ -19,6 +21,10 @@ public class MCMAPI {
         return MCchatManager.gui;
     }
 
+    public static ChatClient getChatClient(){
+        return MCchatManager.gui.client;
+    }
+
     public static ConfigFileManager getConfigManager(){
         return MCchatManager.config;
     }
@@ -29,6 +35,28 @@ public class MCMAPI {
 
     public static void sendChat(String msg){
         MCchatManager.gui.client.getSession().send(new ClientChatPacket(msg));
+    }
+
+    public static boolean connectServer(String email,String pass,String serverip,int port){
+        disconnectServer();
+        try {
+            getChatClient().login(email, pass);
+        } catch (RequestException ee) {
+            getGUIManager().resetState();
+            return false;
+        }
+        getGUIManager().email = email;
+        getGUIManager().pass = pass;
+        getGUIManager().serverip = serverip;
+        getGUIManager().port = port;
+        getChatClient().connect(serverip, port, false);
+        return true;
+    }
+
+    public static void disconnectServer(){
+        if(getGUIManager().client.session != null && getGUIManager().client.session.isConnected()) {
+            getChatClient().disconnect();
+        }
     }
 
     public static Path getApplicationPath(Class<?> cls) throws URISyntaxException {

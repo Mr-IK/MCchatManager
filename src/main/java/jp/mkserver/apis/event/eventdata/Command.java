@@ -1,17 +1,17 @@
-package jp.mkserver.apis;
+package jp.mkserver.apis.event.eventdata;
 
 import jp.mkserver.apis.event.Cancellble;
 
-public class Message implements Cancellble {
+public class Command implements Cancellble {
     private boolean canceled;
-    private String message;
+    private String cmd;
 
-    public Message(String message){
-        this.message = message;
+    public Command(String cmd){
+        this.cmd = cmd;
     }
 
-    public String getMessage() {
-        return message;
+    public String getCmd() {
+        return cmd;
     }
 
 
@@ -23,11 +23,12 @@ public class Message implements Cancellble {
 
     @Override
     public String toString() {
-        return "『"+message+"』 "+canceled;
+        return "『"+cmd+"』 "+canceled;
     }
 
     @Override
     public boolean isCancelled() {
-        return false;
+        return canceled;
     }
 }
+

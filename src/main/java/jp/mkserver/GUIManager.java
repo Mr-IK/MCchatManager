@@ -95,9 +95,9 @@ public class GUIManager extends JFrame implements ActionListener {
             scrollpane.setOpaque(false);
             scrollpane.getViewport().setOpaque(false);
             contentLabel.add(scrollpane, BorderLayout.CENTER);
-            contentPane.add(contentLabel, BorderLayout.NORTH);
+            contentPane.add(contentLabel, BorderLayout.CENTER);
         }else{
-            contentPane.add(scrollpane, BorderLayout.NORTH);
+            contentPane.add(scrollpane, BorderLayout.CENTER);
         }
         JPanel p = new JPanel();
         p.setOpaque(true);
@@ -229,8 +229,12 @@ public class GUIManager extends JFrame implements ActionListener {
         p2.add(button3);
         p2.add(button4);
 
-        contentPane.add(p, BorderLayout.CENTER);
-        contentPane.add(p2, BorderLayout.SOUTH);
+        JPanel p3 = new JPanel();
+        p3.setLayout(new BorderLayout());
+        p3.add(p,BorderLayout.CENTER);
+        p3.add(p2,BorderLayout.SOUTH);
+
+        contentPane.add(p3, BorderLayout.SOUTH);
 
         wave = 0;
         setVisible(true);

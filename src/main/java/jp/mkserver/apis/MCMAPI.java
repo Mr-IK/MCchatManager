@@ -2,9 +2,7 @@ package jp.mkserver.apis;
 
 import com.github.steveice10.mc.auth.exception.request.RequestException;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
-import jp.mkserver.ChatClient;
-import jp.mkserver.GUIManager;
-import jp.mkserver.MCchatManager;
+import jp.mkserver.*;
 import jp.mkserver.utils.ConfigFileManager;
 
 import java.net.URI;
@@ -23,6 +21,14 @@ public class MCMAPI {
 
     public static ChatClient getChatClient(){
         return MCchatManager.gui.client;
+    }
+
+    public static MainGUI getMainGUI(){
+        return MCchatManager.gui.maingui;
+    }
+
+    public static PluginsGUI getPluginsGUI(){
+        return MCchatManager.gui.plgui;
     }
 
     public static ConfigFileManager getConfigManager(){

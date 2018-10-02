@@ -15,13 +15,17 @@ public class MCchatManager {
         gui = new GUIManager();
         System.out.println("Enabled MC chat Manager!");
         System.out.println("creator: Mr_IK");
-        System.out.println("version: 1.1");
+        System.out.println("version: 1.2");
         sendUpdateMessage();
         config = new ConfigFileManager(gui);
         System.out.println(" ");
         System.out.println( "プラグインをロード中…" );
         PluginAPI.loadPluginAll();
         System.out.println( "プラグインのロード完了!(ロードプラグイン数: "+PluginAPI.plugins.size()+")" );
+        gui.setVisible(true);
+        System.out.println(" ");
+        System.out.println( "最新バージョンをチェック中…" );
+        Updater.enableUpdater();
         System.out.println(" ");
         System.out.println( "メールアドレスを入力してください！" );
         System.out.println( "テンプレートで接続したい場合　テンプレJoinボタンを押してください" );
@@ -29,11 +33,15 @@ public class MCchatManager {
 
     public static void sendUpdateMessage(){
         System.out.println(("--------------------------------------"));
-        System.out.println(("★ v1.1 アップデート情報！ ★"));
-        System.out.println(("* プラグイン機能アップデート!"));
-        System.out.println(("さらに沢山の機能を追加・修正！"));
-        System.out.println(("* !endくんさらば！"));
-        System.out.println(("もうXを押せばいいよね！"));
+        System.out.println(("★ v1.2 アップデート情報！ ★"));
+        System.out.println(("* メインGUI追加！"));
+        System.out.println(("大変だった…でも使いやすくなったね！"));
+        System.out.println(("* アップデート機能追加！"));
+        System.out.println(("使いすぎると制限がかかるよ！"));
+        System.out.println(("* プラグインGUI追加！"));
+        System.out.println(("入っているプラグインのGUIが使える"));
+        System.out.println(("* その他もろもろ込み！"));
+        System.out.println(("いままでで一番時間のかかったアプデだよ！"));
         System.out.println(("--------------------------------------"));
     }
 

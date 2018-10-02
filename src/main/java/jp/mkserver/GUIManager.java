@@ -32,22 +32,54 @@ public class GUIManager extends JFrame implements ActionListener {
     public ArrayList<String> inputlist = new ArrayList<>();
     int myinputget = 0;
 
+    public JPanel mainPanel;
+
+    ////////////////ChatGUI//////
+    JPanel p4;
+    private final CardLayout layout = new CardLayout();
+    /////////////////////////////
+
+    ///////////////PluginsGUI////
+    public PluginsGUI plgui;
+    /////////////////////////////
+
     public JTextField text1;
     public JTextArea area;
     public ChatClient client;
+    public MainGUI maingui;
+    public WindowClosing windowClosing;
     public int wave = 0;
     public String email;
     public String pass;
     public String serverip;
     public int port;
 
+    public void setviewChat(){
+        this.setResizable(true);
+        layout.show(mainPanel,p4.getName());
+    }
+
+    public void setviewMain(){
+        setSize(600,400);
+        this.setResizable(false);
+        layout.show(mainPanel,maingui.getName());
+    }
+
+    public void setviewPlugins(){
+        setSize(600,400);
+        this.setResizable(false);
+        layout.show(mainPanel,plgui.getName());
+    }
+
 
     GUIManager (){
         this.client = new ChatClient(this);
         setTitle("MCchatManager");
-        setSize(500,400);
+        setSize(600,400);
+        setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowClosing());
+        windowClosing = new WindowClosing();
+        addWindowListener(windowClosing);
         URL url=getClass().getClassLoader().getResource("Icon.png");
         ImageIcon icon=new ImageIcon(url);
         setIconImage(icon.getImage());
@@ -86,7 +118,7 @@ public class GUIManager extends JFrame implements ActionListener {
         } catch (IOException | URISyntaxException ignored) {
         }
 
-        Container contentPane = getContentPane();
+        JLabel content = null;
         if(backgroundImg != null) {
             Icon backgroundIcon = new ImageIcon(backgroundImg);
             JLabel contentLabel = new JLabel(backgroundIcon);
@@ -95,13 +127,11 @@ public class GUIManager extends JFrame implements ActionListener {
             scrollpane.setOpaque(false);
             scrollpane.getViewport().setOpaque(false);
             contentLabel.add(scrollpane, BorderLayout.CENTER);
-            contentPane.add(contentLabel, BorderLayout.CENTER);
-        }else{
-            contentPane.add(scrollpane, BorderLayout.CENTER);
+            content = contentLabel;
         }
         JPanel p = new JPanel();
         p.setOpaque(true);
-        text1 = new JTextField("メールアドレスを入力", 20);
+        text1 = new JTextField("", 20);
         text1.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -122,13 +152,13 @@ public class GUIManager extends JFrame implements ActionListener {
                     if (wave != 3) {
                         if (wave == 0) {
                             email = message;
-                            text1.setText("パスワードを入力");
+                            text1.setText("");
                             System.out.println("パスワードを入力してください");
                             wave++;
                             return;
                         } else if (wave == 1) {
                             pass = message;
-                            text1.setText("サーバーIP:ポートを入力");
+                            text1.setText("");
                             System.out.println("サーバーIP:ポートを入力してください");
                             wave++;
                             return;
@@ -146,7 +176,7 @@ public class GUIManager extends JFrame implements ActionListener {
                             } else {
                                 port = 25565;
                             }
-                            text1.setText("チャット内容を入力");
+                            text1.setText("");
                             wave++;
                             try {
                                 client.login(email, pass);
@@ -220,6 +250,8 @@ public class GUIManager extends JFrame implements ActionListener {
         button3.addActionListener(new ClickAction4(this));
         JButton button4 = new JButton("サーバー離脱");
         button4.addActionListener(new ClickAction5(this));
+        JButton button5 = new JButton("メインメニュー");
+        button5.addActionListener(new ClickAction6(this));
 
         p.add(text1);
         p.add(button);
@@ -228,16 +260,41 @@ public class GUIManager extends JFrame implements ActionListener {
         p2.add(button2);
         p2.add(button3);
         p2.add(button4);
+        p2.add(button5);
 
         JPanel p3 = new JPanel();
         p3.setLayout(new BorderLayout());
         p3.add(p,BorderLayout.CENTER);
         p3.add(p2,BorderLayout.SOUTH);
 
-        contentPane.add(p3, BorderLayout.SOUTH);
-
         wave = 0;
-        setVisible(true);
+        maingui = new MainGUI(this);
+
+        plgui = new PluginsGUI(maingui);
+
+        p4 = new JPanel();
+        p4.setOpaque(false);
+        p4.setLayout(new BorderLayout());
+        if(content != null) {
+            p4.add(content, BorderLayout.CENTER);
+        }else{
+            p4.add(scrollpane, BorderLayout.CENTER);
+        }
+        p4.add(p3,BorderLayout.SOUTH);
+        p4.setName("ChatGUI");
+
+        Container contentPane = getContentPane();
+
+        mainPanel = new JPanel();
+        mainPanel.setLayout(layout);
+
+        mainPanel.add(maingui,maingui.getName());
+        mainPanel.add(p4,p4.getName());
+        mainPanel.add(plgui,plgui.getName());
+
+        contentPane.add(mainPanel);
+
+
     }
 
     public void setTextColor(int r,int g,int b){
@@ -245,6 +302,13 @@ public class GUIManager extends JFrame implements ActionListener {
         area.updateUI();
     }
 
+    public void addWindowclose(){
+        addWindowListener(windowClosing);
+    }
+
+    public void removeWindowclose(){
+        removeWindowListener(windowClosing);
+    }
 
 
     public void actionPerformed(ActionEvent e){
@@ -264,13 +328,13 @@ public class GUIManager extends JFrame implements ActionListener {
         if (wave != 3) {
             if (wave == 0) {
                 email = message;
-                text1.setText("パスワードを入力");
+                text1.setText("");
                 System.out.println("パスワードを入力してください");
                 wave++;
                 return;
             } else if (wave == 1) {
                 pass = message;
-                text1.setText("サーバーIP:ポートを入力");
+                text1.setText("");
                 System.out.println("サーバーIP:ポートを入力してください");
                 wave++;
                 return;
@@ -288,7 +352,7 @@ public class GUIManager extends JFrame implements ActionListener {
                 } else {
                     port = 25565;
                 }
-                text1.setText("チャット内容を入力");
+                text1.setText("");
                 wave++;
                 try {
                     client.login(email, pass);
@@ -387,13 +451,31 @@ public class GUIManager extends JFrame implements ActionListener {
         }
     }
 
+    class ClickAction6 implements ActionListener {
+
+        GUIManager guiManager;
+        public ClickAction6(GUIManager guiManager){
+            this.guiManager = guiManager;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(guiManager.client.session != null && guiManager.client.session.isConnected()) {
+                guiManager.text1.setText("");
+                client.disconnect();
+            }
+            guiManager.setviewMain();
+        }
+    }
+
+
     public void resetState(){
         wave = 0;
         email = null;
         pass = null;
         serverip = null;
         port = 25565;
-        text1.setText("メールアドレスを入力");
+        text1.setText("");
         System.out.println( "メールアドレスを入力してください！" );
     }
 

@@ -1,6 +1,7 @@
 package jp.mkserver.apis;
 
 import jp.mkserver.apis.java.JarLoader;
+import jp.mkserver.utils.PluginData;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.jar.JarFile;
 public class PluginAPI {
 
     public static ArrayList<File> plugins = new ArrayList<>();
+    public static ArrayList<PluginData> datas = new ArrayList<>();
 
     public static void loadPluginAll(){
         File[] files = JarLoader.getPluginsFile();
@@ -34,6 +36,7 @@ public class PluginAPI {
             }
             pm.onEnable();
             plugins.add(file);
+            datas.add(JarLoader.callData(file));
         } catch (Exception ignored) {
         }
     }
@@ -46,6 +49,7 @@ public class PluginAPI {
             }
             pm.onDisable();
             plugins.remove(file);
+            datas.remove(JarLoader.callData(file));
         } catch (Exception ignored) {
         }
     }

@@ -21,8 +21,8 @@ public class LogFileManager {
             LocalDateTime d = LocalDateTime.now();
             DateTimeFormatter df1 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss");
             s = df1.format(d);
-            new File(getApplicationPath(MCchatManager.class).getParent().toString()+"\\logs").mkdir();
-            file = new File(getApplicationPath(MCchatManager.class).getParent().toString()+"\\logs\\LogFile_"+s+".txt");
+            new File(getApplicationPath(MCchatManager.class).getParent().toString()+File.separator+"logs").mkdir();
+            file = new File(getApplicationPath(MCchatManager.class).getParent().toString()+File.separator+"logs"+File.separator+"LogFile_"+s+".txt");
             file.createNewFile();
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true),"utf-8"));
             bw.write("MCchatManager log [Date: "+s+"]");

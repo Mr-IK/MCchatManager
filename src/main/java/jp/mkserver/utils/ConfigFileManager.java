@@ -20,7 +20,7 @@ public class ConfigFileManager {
     public ConfigFileManager(GUIManager gui){
         this.gui = gui;
         try{
-            file = new File(getApplicationPath(MCchatManager.class).getParent().toString()+"\\config.txt");
+            file = new File(getApplicationPath(MCchatManager.class).getParent().toString()+File.separator+"config.txt");
             if(file.createNewFile()) {
                 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true),"utf-8"));
                 bw.write("※※余計な文字列を書かないでください。最悪バグります");
@@ -30,6 +30,10 @@ public class ConfigFileManager {
                 bw.write("※trueで生成、それ以外の文字列でオフします");
                 bw.newLine();
                 bw.write("log_write=true");
+                bw.newLine();
+                bw.write("※end_checkはエンドチェックを行うかどうかです。");
+                bw.newLine();
+                bw.write("end_check=true");
                 bw.newLine();
                 bw.write("※templateはよく使う条件を簡単にロードできるシステムです。");
                 bw.newLine();
@@ -65,11 +69,17 @@ public class ConfigFileManager {
             BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"UTF-8"));
             String str = br.readLine();
             while(str != null){
-                if(str.startsWith("log_write=")){
-                    String boor = str.replace("log_write=","");
-                    if(!boor.equalsIgnoreCase("true")){
+                if(str.startsWith("log_write=")) {
+                    String boor = str.replace("log_write=", "");
+                    if (!boor.equalsIgnoreCase("true")) {
                         log_write = false;
                         System.out.println("[CONFIG]Logファイル書き込みを無効化しました！");
+                    }
+                }else if(str.startsWith("end_check=")){
+                    String boor = str.replace("end_check=","");
+                    if(!boor.equalsIgnoreCase("true")){
+                        gui.removeWindowclose();
+                        System.out.println("[CONFIG]エンドチェックを無効化しました！");
                     }
                 }else if(str.startsWith("template=")){
                     String message = str.replace("template=","");

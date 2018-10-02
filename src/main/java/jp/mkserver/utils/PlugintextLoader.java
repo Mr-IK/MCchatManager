@@ -7,20 +7,27 @@ import java.io.InputStreamReader;
 
 public class PlugintextLoader {
 
-    public static String load(InputStream input){
+    public static PluginData load(InputStream input){
+        PluginData pluginData = new PluginData();
         BufferedReader br = new BufferedReader(new InputStreamReader(input));
         try {
             String str = br.readLine();
             while(str != null){
                 if(str.startsWith("main: ")) {
-                    return str.replace("main: ","");
+                    pluginData.setMain(str.replace("main: ",""));
+                }else if(str.startsWith("name: ")) {
+                    pluginData.setPluginname(str.replace("name: ",""));
+                }else if(str.startsWith("creator: ")) {
+                    pluginData.setCreator(str.replace("creator: ",""));
+                }else if(str.startsWith("description: ")) {
+                    pluginData.setDescription(str.replace("description: ",""));
                 }
                 str = br.readLine();
             }
         } catch (IOException e) {
-            return null;
+            return pluginData;
         }
-        return null;
+        return pluginData;
     }
 
 }

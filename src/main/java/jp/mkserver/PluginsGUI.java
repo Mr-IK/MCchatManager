@@ -1,5 +1,7 @@
 package jp.mkserver;
 
+import jp.mkserver.apis.MCMAPI;
+
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
@@ -83,12 +85,14 @@ public class PluginsGUI extends JPanel implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            gui.gui.gui.playClickSound();
             gui.gui.gui.setviewMain();
         }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        gui.gui.playClickSound();
         if(area != null) {
             p3.remove(area);
         }

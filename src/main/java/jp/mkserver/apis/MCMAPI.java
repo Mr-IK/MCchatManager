@@ -2,9 +2,13 @@ package jp.mkserver.apis;
 
 import com.github.steveice10.mc.auth.exception.request.RequestException;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
+
+import javax.sound.sampled.*;
+
 import jp.mkserver.*;
 import jp.mkserver.utils.ConfigFileManager;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;

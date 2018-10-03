@@ -1,5 +1,7 @@
 package jp.mkserver;
 
+import jp.mkserver.apis.MCMAPI;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -26,6 +28,8 @@ public class MainGUI extends JPanel {
         button2.addActionListener(new ClickAction2(this));
         JButton button3 = new JButton("プラグインGUIを開く");
         button3.addActionListener(new ClickAction3(this));
+        JButton button4 = new JButton("設定画面を開く");
+        button4.addActionListener(new ClickAction4(this));
         JPanel jp = new JPanel();
         jp.setLayout(new FlowLayout());
         jp.add(button2);
@@ -35,15 +39,24 @@ public class MainGUI extends JPanel {
         jb.setLayout(new FlowLayout());
         jb.add(button1);
         jb.setOpaque(false);
+        JPanel js = new JPanel();
+        js.setLayout(new FlowLayout());
+        js.add(button4);
+        js.setOpaque(false);
         JPanel j = new JPanel();
         j.setLayout(new BorderLayout());
-        j.add(jb,BorderLayout.CENTER);
+        j.add(js,BorderLayout.CENTER);
         j.add(jp,BorderLayout.SOUTH);
         j.setOpaque(false);
+        JPanel jj = new JPanel();
+        jj.setLayout(new BorderLayout());
+        jj.add(jb,BorderLayout.CENTER);
+        jj.add(j,BorderLayout.SOUTH);
+        jj.setOpaque(false);
         JPanel jpp = new JPanel();
         jpp.setLayout(new BorderLayout());
         jpp.setOpaque(false);
-        jpp.add(j,BorderLayout.SOUTH);
+        jpp.add(jj,BorderLayout.SOUTH);
         JPanel jps = new JPanel();
         jps.setLayout(new BorderLayout());
         jps.setOpaque(false);
@@ -52,7 +65,7 @@ public class MainGUI extends JPanel {
         creator.setOpaque(false);
         creator.setForeground(Color.WHITE);
         JLabel ver = new JLabel();
-        ver.setText("MCchatManager v1.2");
+        ver.setText("MCchatManager v1.3");
         ver.setOpaque(false);
         ver.setForeground(Color.WHITE);
         jps.add(jpp,BorderLayout.NORTH);
@@ -76,6 +89,7 @@ public class MainGUI extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            gui.gui.playClickSound();
             gui.gui.setviewChat();
         }
     }
@@ -89,6 +103,7 @@ public class MainGUI extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            gui.gui.playClickSound();
             double ver = Updater.jsontoStringVersion();
             if(Updater.thisversion < ver){
                 Updater.download();
@@ -109,7 +124,22 @@ public class MainGUI extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            gui.gui.playClickSound();
             gui.gui.setviewPlugins();
+        }
+    }
+
+    class ClickAction4 implements ActionListener {
+
+        MainGUI gui;
+        public ClickAction4(MainGUI gui){
+            this.gui = gui;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            gui.gui.playClickSound();
+            gui.gui.setviewSettings();
         }
     }
 

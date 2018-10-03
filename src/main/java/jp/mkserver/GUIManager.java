@@ -4,9 +4,12 @@ import com.github.steveice10.mc.auth.exception.request.RequestException;
 import jp.mkserver.apis.PluginAPI;
 import jp.mkserver.apis.event.EventAPI;
 import jp.mkserver.utils.DefaultContextMenu;
+import jp.mkserver.utils.SettingSaver;
+import jp.mkserver.utils.SoundSetting;
 import jp.mkserver.utils.TextAreaOutputStream;
 
 import javax.imageio.ImageIO;
+import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -15,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -43,6 +47,10 @@ public class GUIManager extends JFrame implements ActionListener {
     public PluginsGUI plgui;
     /////////////////////////////
 
+    ///////////////SettingsGUI///
+    public SettingGUI setgui;
+    /////////////////////////////
+
     public JTextField text1;
     public JTextArea area;
     public ChatClient client;
@@ -69,6 +77,12 @@ public class GUIManager extends JFrame implements ActionListener {
         setSize(600,400);
         this.setResizable(false);
         layout.show(mainPanel,plgui.getName());
+    }
+
+    public void setviewSettings(){
+        setSize(600,400);
+        this.setResizable(false);
+        layout.show(mainPanel,setgui.getName());
     }
 
 
@@ -272,6 +286,8 @@ public class GUIManager extends JFrame implements ActionListener {
 
         plgui = new PluginsGUI(maingui);
 
+        setgui = new SettingGUI(maingui);
+
         p4 = new JPanel();
         p4.setOpaque(false);
         p4.setLayout(new BorderLayout());
@@ -291,10 +307,17 @@ public class GUIManager extends JFrame implements ActionListener {
         mainPanel.add(maingui,maingui.getName());
         mainPanel.add(p4,p4.getName());
         mainPanel.add(plgui,plgui.getName());
+        mainPanel.add(setgui,setgui.getName());
 
         contentPane.add(mainPanel);
 
-
+        SoundSetting sound = SettingSaver.loadSound();
+        if(sound!=null){
+            vold = sound.getVold();
+            vol = sound.getVol();
+            loop = sound.isOn();
+            System.out.println(sound.isOn()+"");
+        }
     }
 
     public void setTextColor(int r,int g,int b){
@@ -316,6 +339,7 @@ public class GUIManager extends JFrame implements ActionListener {
         if(message.replace(" ","").replace("　","").equalsIgnoreCase("")){
             return;
         }
+        playClickSound();
         inputlist.add(message);
         myinputget = inputlist.size()-1;
         if(message.startsWith("!")){
@@ -383,6 +407,7 @@ public class GUIManager extends JFrame implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            guiManager.playClickSound();
             if(guiManager.client.session == null || !guiManager.client.session.isConnected()) {
                 MCchatManager.config.load_login();
             }else{
@@ -400,6 +425,7 @@ public class GUIManager extends JFrame implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            guiManager.playClickSound();
             if(guiManager.client.session == null || !guiManager.client.session.isConnected()) {
                 MCchatManager.config.load_template();
                 try {
@@ -425,6 +451,7 @@ public class GUIManager extends JFrame implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            guiManager.playClickSound();
             if(guiManager.client.session == null || !guiManager.client.session.isConnected()) {
                 guiManager.resetState();
             }else{
@@ -442,6 +469,7 @@ public class GUIManager extends JFrame implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            guiManager.playClickSound();
             if(guiManager.client.session != null && guiManager.client.session.isConnected()) {
                 guiManager.text1.setText("");
                 client.disconnect();
@@ -460,6 +488,7 @@ public class GUIManager extends JFrame implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            guiManager.playClickSound();
             if(guiManager.client.session != null && guiManager.client.session.isConnected()) {
                 guiManager.text1.setText("");
                 client.disconnect();
@@ -497,9 +526,177 @@ public class GUIManager extends JFrame implements ActionListener {
             int ans = JOptionPane.showConfirmDialog(GUIManager.this, "本当に終了しますか?","終了確認",JOptionPane.YES_NO_OPTION);
             if(ans == JOptionPane.YES_OPTION) {
                 PluginAPI.unloadPluginAll();
+                SettingSaver.saveSound(vol,loop,vold);
                 System.exit(0);
             }
         }
+    }
+
+    public synchronized void playClickSound() {
+        new Thread(() -> {
+            File file = new File("sounds"+File.separator+"click.wav");
+            if(!file.exists()){
+                System.out.println("[Error]Sounds/click.wavが存在しません！");
+                return;
+            }
+            try (AudioInputStream ais = AudioSystem.getAudioInputStream(file)) {
+
+                //ファイルの形式取得
+                AudioFormat af = ais.getFormat();
+
+                //単一のオーディオ形式を含む指定した情報からデータラインの情報オブジェクトを構築
+                DataLine.Info dataLine = new DataLine.Info(SourceDataLine.class,af);
+
+                //指定された Line.Info オブジェクトの記述に一致するラインを取得
+                SourceDataLine s = (SourceDataLine)AudioSystem.getLine(dataLine);
+
+                //再生準備完了
+                s.open();
+
+                //ラインの処理を開始
+                s.start();
+
+                //読み込みサイズ
+                byte[] data = new byte[s.getBufferSize()];
+
+                //読み込んだサイズ
+                int size = -1;
+
+                //再生処理のループ
+                while(true) {
+                    //オーディオデータの読み込み
+                    size = ais.read(data);
+                    if ( size == -1 ) {
+                        //すべて読み込んだら終了
+                        break;
+                    }
+                    //ラインにオーディオデータの書き込み
+                    s.write(data, 0, size);
+                }
+
+                //残ったバッファをすべて再生するまで待つ
+                s.drain();
+
+                //ライン停止
+                s.stop();
+
+                //リソース解放
+                s.close();
+
+            } catch (LineUnavailableException | IOException | UnsupportedAudioFileException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private SourceDataLine bgm;
+    private boolean loop = true;
+    private float vol = 0.5f;
+    private double vold = 1.0;
+
+    public void playBGM() {
+        new Thread(() -> {
+            File file = new File("sounds" + File.separator + "bgm.wav");
+            if (!file.exists()) {
+                System.out.println("[Error]Sounds/bgm.wavが存在しません！");
+                return;
+            }
+            if (bgm != null && bgm.isOpen()) {
+                //ライン停止
+                bgm.stop();
+
+                //リソース解放
+                bgm.close();
+            }
+            try {
+
+                AudioInputStream ais = AudioSystem.getAudioInputStream(file);
+                //ファイルの形式取得
+                AudioFormat af = ais.getFormat();
+
+                //単一のオーディオ形式を含む指定した情報からデータラインの情報オブジェクトを構築
+                DataLine.Info dataLine = new DataLine.Info(SourceDataLine.class, af);
+
+                //指定された Line.Info オブジェクトの記述に一致するラインを取得
+                bgm = (SourceDataLine) AudioSystem.getLine(dataLine);
+
+                //再生準備完了
+                bgm.open();
+
+                setBGMVol();
+
+                //ラインの処理を開始
+                bgm.start();
+
+                //読み込みサイズ
+                byte[] data = new byte[bgm.getBufferSize()];
+
+                //読み込んだサイズ
+                int size = -1;
+
+                while (true) {
+                    //再生処理のループ
+                    while (true) {
+                        //オーディオデータの読み込み
+                        size = ais.read(data);
+                        if (size == -1) {
+                            //すべて読み込んだら終了
+                            break;
+                        }
+                        //ラインにオーディオデータの書き込み
+                        bgm.write(data, 0, size);
+                    }
+                    //残ったバッファをすべて再生するまで待つ
+                    bgm.drain();
+                    //ライン停止
+                    bgm.stop();
+                    //リソース解放
+                    bgm.close();
+                    if(!loop){
+                        break;
+                    }
+                    ais = AudioSystem.getAudioInputStream(file);
+                    //単一のオーディオ形式を含む指定した情報からデータラインの情報オブジェクトを構築
+                    dataLine = new DataLine.Info(SourceDataLine.class, af);
+                    //指定された Line.Info オブジェクトの記述に一致するラインを取得
+                    bgm = (SourceDataLine) AudioSystem.getLine(dataLine);
+                    //再生準備完了
+                    bgm.open();
+                    setBGMVol();
+                    //ラインの処理を開始
+                    bgm.start();
+                    data = new byte[bgm.getBufferSize()];
+                    size = -1;
+                }
+
+            } catch (LineUnavailableException | IOException | UnsupportedAudioFileException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    public void setBGMVol(double i){
+        FloatControl ctrl = (FloatControl)bgm.getControl(FloatControl.Type.MASTER_GAIN);
+        ctrl.setValue((float)Math.log10((float)i / 20)*20);
+        vol = (float)Math.log10((float)i / 20)*20;
+        vold = i;
+    }
+
+    public void setBGMVol(float i){
+        FloatControl ctrl = (FloatControl)bgm.getControl(FloatControl.Type.MASTER_GAIN);
+        ctrl.setValue(i);
+    }
+    public void setBGMVol(){
+        setBGMVol(vold);
+    }
+
+    public void setBGMloop(boolean loop){
+        this.loop = loop;
+    }
+
+    public void stopBGM(){
+        bgm.stop();
+        bgm.close();
     }
 
 }

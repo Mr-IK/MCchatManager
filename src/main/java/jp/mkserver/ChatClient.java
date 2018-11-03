@@ -16,7 +16,6 @@ import com.github.steveice10.packetlib.event.session.PacketReceivedEvent;
 import com.github.steveice10.packetlib.event.session.SessionAdapter;
 import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
 import com.google.gson.*;
-import jp.mkserver.apis.event.EventAPI;
 import jp.mkserver.utils.ChatColour;
 import org.apache.commons.lang.StringEscapeUtils;
 
@@ -95,8 +94,6 @@ public class ChatClient {
                                 break;
                         }
                     }
-                }else{
-                    EventAPI.receivePacket(event.getPacket());
                 }
             }
 
@@ -120,7 +117,6 @@ public class ChatClient {
             System.out.println("接続に失敗しました…");
             connected = false;
         }
-        EventAPI.serverJoin(USER,PASS,HOST,PORT,connected);
     }
 
     public int getPORT() {

@@ -1,7 +1,5 @@
 package jp.mkserver;
 
-import jp.mkserver.apis.MCMAPI;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -26,14 +24,11 @@ public class MainGUI extends JPanel {
         button1.addActionListener(new ClickAction1(this));
         JButton button2 = new JButton("アップデートを行う");
         button2.addActionListener(new ClickAction2(this));
-        JButton button3 = new JButton("プラグインGUIを開く");
-        button3.addActionListener(new ClickAction3(this));
         JButton button4 = new JButton("設定画面を開く");
         button4.addActionListener(new ClickAction4(this));
         JPanel jp = new JPanel();
         jp.setLayout(new FlowLayout());
         jp.add(button2);
-        jp.add(button3);
         jp.setOpaque(false);
         JPanel jb = new JPanel();
         jb.setLayout(new FlowLayout());
@@ -112,20 +107,6 @@ public class MainGUI extends JPanel {
                 JOptionPane.showMessageDialog(gui, "このMCchatManagerは最新です。");
             }
 
-        }
-    }
-
-    class ClickAction3 implements ActionListener {
-
-        MainGUI gui;
-        public ClickAction3(MainGUI gui){
-            this.gui = gui;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            gui.gui.playClickSound();
-            gui.gui.setviewPlugins();
         }
     }
 

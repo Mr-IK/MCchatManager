@@ -1,8 +1,7 @@
 package jp.mkserver;
 
 import com.github.steveice10.mc.auth.exception.request.RequestException;
-import jp.mkserver.apis.PluginAPI;
-import jp.mkserver.apis.event.EventAPI;
+import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
 import jp.mkserver.utils.DefaultContextMenu;
 import jp.mkserver.utils.SettingSaver;
 import jp.mkserver.utils.SoundSetting;
@@ -18,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -41,10 +39,6 @@ public class GUIManager extends JFrame implements ActionListener {
     ////////////////ChatGUI//////
     JPanel p4;
     private final CardLayout layout = new CardLayout();
-    /////////////////////////////
-
-    ///////////////PluginsGUI////
-    public PluginsGUI plgui;
     /////////////////////////////
 
     ///////////////SettingsGUI///
@@ -71,12 +65,6 @@ public class GUIManager extends JFrame implements ActionListener {
         setSize(600,400);
         this.setResizable(false);
         layout.show(mainPanel,maingui.getName());
-    }
-
-    public void setviewPlugins(){
-        setSize(600,400);
-        this.setResizable(false);
-        layout.show(mainPanel,plgui.getName());
     }
 
     public void setviewSettings(){
@@ -156,13 +144,6 @@ public class GUIManager extends JFrame implements ActionListener {
                     }
                     inputlist.add(message);
                     myinputget = inputlist.size()-1;
-                    if(message.startsWith("!")){
-                        String cmd = message.replaceFirst("!","");
-                        text1.setText("");
-                        if(!EventAPI.executeCommand(cmd)){
-                            return;
-                        }
-                    }
                     if (wave != 3) {
                         if (wave == 0) {
                             email = message;
@@ -212,7 +193,7 @@ public class GUIManager extends JFrame implements ActionListener {
                         client.disconnect();
                         return;
                     }
-                    EventAPI.sendMessage(message);
+                    client.getSession().send(new ClientChatPacket(message));
                     text1.setText("");
                 }else if(e.getKeyCode() == KeyEvent.VK_UP) {
                     if(inputlist.size()==0){
@@ -284,8 +265,6 @@ public class GUIManager extends JFrame implements ActionListener {
         wave = 0;
         maingui = new MainGUI(this);
 
-        plgui = new PluginsGUI(maingui);
-
         setgui = new SettingGUI(maingui);
 
         p4 = new JPanel();
@@ -306,7 +285,6 @@ public class GUIManager extends JFrame implements ActionListener {
 
         mainPanel.add(maingui,maingui.getName());
         mainPanel.add(p4,p4.getName());
-        mainPanel.add(plgui,plgui.getName());
         mainPanel.add(setgui,setgui.getName());
 
         contentPane.add(mainPanel);
@@ -316,7 +294,6 @@ public class GUIManager extends JFrame implements ActionListener {
             vold = sound.getVold();
             vol = sound.getVol();
             loop = sound.isOn();
-            System.out.println(sound.isOn()+"");
         }
     }
 
@@ -342,13 +319,6 @@ public class GUIManager extends JFrame implements ActionListener {
         playClickSound();
         inputlist.add(message);
         myinputget = inputlist.size()-1;
-        if(message.startsWith("!")){
-            String cmd = message.replaceFirst("!","");
-            text1.setText("");
-            if(!EventAPI.executeCommand(cmd)){
-                return;
-            }
-        }
         if (wave != 3) {
             if (wave == 0) {
                 email = message;
@@ -394,7 +364,7 @@ public class GUIManager extends JFrame implements ActionListener {
             text1.setText("");
             return;
         }
-        EventAPI.sendMessage(message);
+        client.getSession().send(new ClientChatPacket(message));
         text1.setText("");
     }
 
@@ -525,7 +495,6 @@ public class GUIManager extends JFrame implements ActionListener {
         public void windowClosing(WindowEvent e) {
             int ans = JOptionPane.showConfirmDialog(GUIManager.this, "本当に終了しますか?","終了確認",JOptionPane.YES_NO_OPTION);
             if(ans == JOptionPane.YES_OPTION) {
-                PluginAPI.unloadPluginAll();
                 SettingSaver.saveSound(vol,loop,vold);
                 System.exit(0);
             }

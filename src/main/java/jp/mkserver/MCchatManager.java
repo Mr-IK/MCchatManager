@@ -1,7 +1,6 @@
 package jp.mkserver;
 
 
-import jp.mkserver.apis.PluginAPI;
 import jp.mkserver.utils.ConfigFileManager;
 
 public class MCchatManager {
@@ -19,9 +18,6 @@ public class MCchatManager {
         sendUpdateMessage();
         config = new ConfigFileManager(gui);
         System.out.println(" ");
-        System.out.println( "プラグインをロード中…" );
-        PluginAPI.loadPluginAll();
-        System.out.println( "プラグインのロード完了!(ロードプラグイン数: "+PluginAPI.plugins.size()+")" );
         gui.setVisible(true);
         gui.playBGM();
         System.out.println(" ");

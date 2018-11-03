@@ -27,7 +27,7 @@ public class LogFileManager {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true),"utf-8"));
             bw.write("MCchatManager log [Date: "+s+"]");
             bw.newLine();
-            bw.write("version 0.4");
+            bw.write("version 1.3");
             bw.newLine();
             bw.close();
         }catch(IOException | URISyntaxException e){
